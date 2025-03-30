@@ -1,0 +1,4 @@
+.idea/
+.venv/
+storage/database.db
+config/.env
