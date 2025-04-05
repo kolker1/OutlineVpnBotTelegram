@@ -2,3 +2,5 @@ pydantic==2.11.1
 pydantic-settings==2.8.1
 aiogram==3.19.0
 aiosqlite==0.21.0
+AsyncYoomoney==0.1.4
+outline-vpn-api-async==0.1.2

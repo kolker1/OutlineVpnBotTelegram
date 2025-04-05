@@ -1,5 +1,4 @@
 import asyncio
-from datetime import datetime
 from pathlib import Path
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
@@ -19,7 +18,6 @@ class User(Base):
 
     chat_id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str | None]
-    remaining_time: Mapped[datetime | None]
 
 
 async def init_db():
@@ -29,6 +27,3 @@ async def init_db():
 
 async def main():
     await init_db()
-
-
-# asyncio.run(main())

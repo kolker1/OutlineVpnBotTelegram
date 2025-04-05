@@ -1,12 +1,14 @@
 from aiogram import F, Router
 from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramBadRequest
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, Filter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, ReplyKeyboardMarkup, \
     KeyboardButton
 
+from db.query import add_user, get_user
+from utils.create_url import Payment
 from utils.vpn import MyClassOutlineVpn
 
 router = Router()
@@ -16,14 +18,24 @@ class MainState(StatesGroup):
     support = State()
 
 
+class Reg(Filter):
+    async def __call__(self, message: Message) -> bool:
+        if not await get_user(message.chat.id):
+            await message.answer('Для регистрации нажмите /start!')
+            return False
+        return True
+
+
 @router.message(CommandStart())
 async def cmd_start(message: Message) -> None:
+    await add_user(message.chat.id, message.chat.username)
+
     markup = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="Получить ключ", callback_data="get_key")],
-            [InlineKeyboardButton(text="Мой ключ", callback_data="my_key")],
-            [InlineKeyboardButton(text="Инструкция", callback_data="instruction")],
-            [InlineKeyboardButton(text="Тех. Поддержка", callback_data="support")]
+            [InlineKeyboardButton(text="Инструкция", callback_data="instruction"),
+             InlineKeyboardButton(text="Тех. Поддержка", callback_data="support")],
+            [InlineKeyboardButton(text="Пожертвование", callback_data="donation")]
         ]
     )
 
@@ -33,7 +45,7 @@ async def cmd_start(message: Message) -> None:
         await message.answer('Привет!', reply_markup=markup)
 
 
-@router.callback_query(F.data.in_({"get_key", "my_key", "instruction", "support", "back_menu"}))
+@router.callback_query(F.data.in_({"get_key", "instruction", "support", "back_menu", "donation"}))
 async def click(callback: CallbackQuery, state: FSMContext) -> None:
     if callback.data == "back_menu":
         return await cmd_start(callback.message)
@@ -46,43 +58,44 @@ async def click(callback: CallbackQuery, state: FSMContext) -> None:
             ]
         )
 
+        loading_message = await callback.message.edit_text('Подождите, загрузка...')
+
         async with MyClassOutlineVpn() as sess:
-            if not await sess.one_key_info(callback.message.chat.id):
-                key = await sess.create_new_key(callback.message.chat.id)
-                await callback.message.edit_text(text=f'Вот ваша ссылка `{key}`', parse_mode=ParseMode.MARKDOWN)
+            if key := await sess.one_key_info(callback.message.chat.id):
+                access_url = key[1]
             else:
-                await callback.answer(
-                    text='У вас уже есть ключ, зайдите во вкладку мой ключ для повторного просмотра',
-                    show_alert=True
-                )
+                access_url = await sess.create_new_key(callback.message.chat.id)
+
+            await loading_message.edit_text(
+                text=f'Вот ваш ключ: `{access_url}`',
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=markup
+            )
 
     if callback.data == "instruction":
+        markup = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Назад", callback_data="back_menu")]])
         await callback.message.edit_text("Впн бот тебе в помощь бро", reply_markup=markup)
-
-    if callback.data == "my_key":
-        markup = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [InlineKeyboardButton(text="Назад", callback_data="back_menu")]
-            ]
-        )
-        async with MyClassOutlineVpn() as sess:
-            key = await sess.one_key_info(callback.message.chat.id)
-
-        if key:
-            await callback.message.edit_text(
-                f"Вот твой ключ: `{key[1]}`",
-                reply_markup=markup,
-                parse_mode=ParseMode.MARKDOWN
-            )
-        else:
-            await callback.answer(text='Ниту', show_alert=True)
 
     if callback.data == "support":
         markup = ReplyKeyboardMarkup(
             resize_keyboard=True,
-            keyboard=[[KeyboardButton(text="❌ Отмена ❌")]],
+            keyboard=[[KeyboardButton(text="❌ Отмена ")]],
             one_time_keyboard=True
         )
         await callback.message.delete()
         await callback.message.answer("Напиши сообщение", reply_markup=markup)
-        return await state.set_state(MainState.support)
+        await state.set_state(MainState.support)
+
+    if callback.data == 'donation':
+        markup = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text="50 ₽", url=Payment(sum=50).create_url)],
+                [InlineKeyboardButton(text="100 ₽", url=Payment(sum=100).create_url)],
+                [InlineKeyboardButton(text="250 ₽", url=Payment(sum=250).create_url)],
+                [InlineKeyboardButton(text="500 ₽", url=Payment(sum=500).create_url)],
+                [InlineKeyboardButton(text="Назад", callback_data="back_menu")]
+            ]
+        )
+        await callback.message.edit_text("Выберите сумму поддержки.", reply_markup=markup)
+
+    return None
