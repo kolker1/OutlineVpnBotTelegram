@@ -21,7 +21,7 @@ class AdminFilter(Filter):
 @router.message(Command('write_user'), AdminFilter())
 async def write_user(message: Message, command: CommandObject):
     if not command.args:
-        return await message.answer("Напишите ответ для пользователя")
+        return await message.answer("Напишите что-то.")
 
     try:
         chat_id = int(command.args.split()[0])
@@ -31,15 +31,29 @@ async def write_user(message: Message, command: CommandObject):
             raise ValueError
 
     except ValueError:
-        return await message.answer("В ответе должен быть chat\\_id, а потом текст")
+        return await message.answer("В ответе должен быть chat\\_id, а потом текст.")
 
     if await get_user(chat_id):
         try:
-            await bot.send_message(chat_id, f"*Ответ от Тех.Поддержки:*\n\n{' '.join(text)}", parse_mode=ParseMode.MARKDOWN)
+            await bot.send_message(chat_id, f"*🛠️ Ответ от Тех.Поддержки:*\n\n{' '.join(text)}",
+                                   parse_mode=ParseMode.MARKDOWN)
             await message.answer(f'Ответ был отправлен пользователю - {chat_id}!')
         except TelegramForbiddenError:
-            await message.answer("Бот заблокирован у пользователя")
+            await message.answer("Бот заблокирован у пользователя.")
     else:
-        await message.answer('Такого пользователя не существует')
+        await message.answer('Такого пользователя не существует.')
+
+    return None
+
+
+@router.message(Command('learn_id'), AdminFilter())
+async def write_user(message: Message, command: CommandObject):
+    if not command.args:
+        return await message.answer("Напишите что-то.")
+
+    if user := await get_user(username=command.args):
+        await message.answer(f'ID: `{user.chat_id}`.', parse_mode=ParseMode.MARKDOWN)
+    else:
+        await message.answer('Такого пользователя не существует.')
 
     return None

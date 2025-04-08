@@ -1,4 +1,4 @@
-from outline_vpn import OutlineVPN, OutlineKey
+from outline_vpn import OutlineVPN
 
 from config.loading import config
 

@@ -1,3 +1,5 @@
+from sqlalchemy import select
+
 from db.models import User
 from db.models import session
 
@@ -23,6 +25,17 @@ async def update_user(user: User) -> None:
         await sess.commit()
 
 
-async def get_user(chat_id: int) -> User:
+async def get_user(chat_id: int | None = None, username: str | None = None) -> User:
     async with session() as sess:
-        return await sess.get(User, chat_id)
+
+        query = select(User)
+
+        if chat_id:
+            query = query.where(User.chat_id == chat_id)
+        else:
+            query = query.where(User.username == username)
+
+        user = await sess.execute(query)
+        user = user.scalar_one_or_none()
+
+        return user

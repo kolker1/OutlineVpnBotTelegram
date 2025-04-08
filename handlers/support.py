@@ -1,4 +1,5 @@
 from aiogram import Router
+from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
 from aiogram.types import ReplyKeyboardRemove, Message
 
@@ -13,9 +14,9 @@ SUPPORT_CHAT_ID = -1002481972506
 async def support_func(message: Message, state: FSMContext):
     try:
 
-        if message.text == "❌ Отмена ":
+        if message.text == "🚫 Отмена":
             await message.answer(
-                "❌ Отменено ",
+                "🚫 Отменено",
                 reply_markup=ReplyKeyboardRemove()
             )
             return await cmd_start(message)
@@ -34,8 +35,10 @@ async def support_func(message: Message, state: FSMContext):
             await bot.send_message(
                 chat_id=SUPPORT_CHAT_ID,
                 text=f'{message.text}\n\n'
+                     f'ID: `{message.chat.id}`\n'
                      f'Username: `{message.chat.username}`',
-                entities=message.entities
+                entities=message.entities,
+                parse_mode=ParseMode.MARKDOWN
             )
 
         await message.answer(
