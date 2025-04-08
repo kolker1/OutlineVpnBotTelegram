@@ -13,9 +13,9 @@ SUPPORT_CHAT_ID = -1002481972506
 async def support_func(message: Message, state: FSMContext):
     try:
 
-        if message.text == "❌ Отмена ❌":
+        if message.text == "❌ Отмена ":
             await message.answer(
-                "❌ Отменено ❌",
+                "❌ Отменено ",
                 reply_markup=ReplyKeyboardRemove()
             )
             return await cmd_start(message)

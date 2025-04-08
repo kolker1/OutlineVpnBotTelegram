@@ -40,9 +40,19 @@ async def cmd_start(message: Message) -> None:
     )
 
     try:
-        await message.edit_text('Привет!', reply_markup=markup)
+        await message.edit_text(
+            '👋Рад вас видеть! \n\n\n '
+            '🚀Именно в этом телеграмм боте вы можете получить бесплатный ключ для OutlineVpn. \n'
+            '🖥️OutlineVpn можно использовать как на компьютере, так и на телефоне.  \n\n\n'
+            '🌍OutlineVpn надежный и имеет очень быстрые сервера с помощью которых вы можете выходить спокойно в интернет на заблокированные сайты в вашей стране. \n'
+            '⬇️Для получения ключа нажмите на кнопку ниже - *Получить ключ*⬇️',
+            reply_markup=markup)
     except TelegramBadRequest:
-        await message.answer('Привет!', reply_markup=markup)
+        await message.answer('👋Рад вас видеть! \n\n\n '
+                             '🚀Именно в этом телеграмм боте вы можете получить бесплатный ключ для OutlineVpn. \n'
+                             '🖥️OutlineVpn можно использовать как на компьютере, так и на телефоне.  \n\n\n'
+                             '🌍OutlineVpn надежный и имеет очень быстрые сервера с помощью которых вы можете выходить спокойно в интернет на заблокированные сайты в вашей стране. \n'
+                             '⬇️Для получения ключа нажмите на кнопку ниже - *Получить ключ*⬇️', reply_markup=markup)
 
 
 @router.callback_query(F.data.in_({"get_key", "instruction", "support", "back_menu", "donation"}))
@@ -54,7 +64,7 @@ async def click(callback: CallbackQuery, state: FSMContext) -> None:
         markup = InlineKeyboardMarkup(
             inline_keyboard=[
                 [InlineKeyboardButton(text="Инструкция", callback_data="instruction")],
-                [InlineKeyboardButton(text="Назад", callback_data="back_menu")]
+                [InlineKeyboardButton(text="⏪Назад", callback_data="back_menu")]
             ]
         )
 
@@ -67,14 +77,21 @@ async def click(callback: CallbackQuery, state: FSMContext) -> None:
                 access_url = await sess.create_new_key(callback.message.chat.id)
 
             await loading_message.edit_text(
-                text=f'Вот ваш ключ: `{access_url}`',
+                text=f'🔑Вот ваш ключ с помощью которого вы можете подключить себе впн.\n '
+                     f'Если вы не знаете как сделать это, то вернитесь обратно и кликните на инструкцию : `{access_url}`',
+
                 parse_mode=ParseMode.MARKDOWN,
                 reply_markup=markup
             )
 
     if callback.data == "instruction":
-        markup = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Назад", callback_data="back_menu")]])
-        await callback.message.edit_text("Впн бот тебе в помощь бро", reply_markup=markup)
+        markup = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="⏪Назад", callback_data="back_menu")]])
+        await callback.message.edit_text("👋Привет! \n\n Ты не знаешь как подключить себе OutlineVpn? Я помогу тебе в этом. \n "
+                                         "1.📤Нужно скачать приложение OutlineVpn в Google Play Market. \n"
+                                         "2.🔑В главном меню нужно получить ключ для подключения Vpn.\n"
+                                         "3.▶️Заходите в OutlineVpn и вставляете ключ который вам дал бот. \n"
+                                         "4.💟Пользуетесь на здоровье впном без какой либо рекламы!", reply_markup=markup)
+
 
     if callback.data == "support":
         markup = ReplyKeyboardMarkup(
@@ -93,7 +110,7 @@ async def click(callback: CallbackQuery, state: FSMContext) -> None:
                 [InlineKeyboardButton(text="100 ₽", url=Payment(sum=100).create_url)],
                 [InlineKeyboardButton(text="250 ₽", url=Payment(sum=250).create_url)],
                 [InlineKeyboardButton(text="500 ₽", url=Payment(sum=500).create_url)],
-                [InlineKeyboardButton(text="Назад", callback_data="back_menu")]
+                [InlineKeyboardButton(text="⏪Назад", callback_data="back_menu")]
             ]
         )
         await callback.message.edit_text("Выберите сумму поддержки.", reply_markup=markup)
